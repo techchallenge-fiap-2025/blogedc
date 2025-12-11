@@ -2,154 +2,198 @@
 
 Aplicativo mobile desenvolvido em React Native (Expo) para a Fase 4 da pós-graduação em Full Stack Development, da FIAP.
 
-O app oferece uma interface para alunos e professores interagirem com a plataforma de blogging, consumindo o backend REST em Node.js.
+O projeto foca em desenvolver o front-end mobile de uma aplicação de blogging, integrando-se com endpoints REST já existentes.
 
--**Alunos:** podem visualizar e ler posts.
--**Professores:** podem criar, editar e excluir posts, professores e alunos.
--**Administrador (professor):** possui acesso às telas de gestão.
+### Objetivo
+Facilitar a comunicação entre professores e alunos da rede pública por meio de uma plataforma de blogging educacional via aplicativo mobile que permita a publicação e o acesso a conteúdos escolares, como textos e atividades.
 
----
+### Público-alvo
+Pessoas da rede pública de educação, mais especificamente dois agentes:
+- **Alunos:** Podem visualizar, ler posts e interagir (curtir/comentar).
+- **Professores/Administradores:** Podem criar, editar e excluir posts, e gerenciar a listagem e edição de outros usuários (Professores e Alunos).
 
-## 📌 Índice
+### Equipe
 
-- [Sobre o Projeto](#sobre-o-projeto)  
-- [Tecnologias Utilizadas](#tecnologias-utilizadas)  
-- [Arquitetura do Projeto](#arquitetura-do-projeto)
-- [Funcionalidades](#funcionalidades)  
-- [Instalação e Execução](#instalação-e-execução)  
-- [Funcionalidades](#funcionalidades)  
-- [Fluxo de Autenticação](#fluxo-de-autenticação)  
-- [Integração com o Back-end](#integração-com-o-back-end)  
-- [Guia de Uso](#guia-de-uso)  
-- [Desafios e Aprendizados](#desafios-e-aprendizados)  
-- [Equipe](#equipe)
+| Nome                    | E-mail                           |
+|-------------------------|-----------------------------------|
+| Lucas Piran             | lucas13piran@gmail.com            |
+| Felipe Ragne Silveira   | frsilveira01@outlook.com          |
+| Lais Taine de Oliveira  | lais.taine@gmail.com              |
+| Pedro Juliano Quimelo   | pedrojulianoquimelo@outlook.com   |
+
 
 ---
 
-# Sobre o Projeto
+## Índice
 
-O **BlogEDC Mobile** é a versão mobile da plataforma de blogging desenvolvida no Tech Challenge da Fase 4.  
-O app oferece uma interface limpa e responsiva para acessar, criar e administrar conteúdo, seguindo regras de autenticação e autorização definidas no backend.
-
-Para isso, utiliza **Expo Router**, Context API e componentes reutilizáveis.
-
----
-
-# Tecnologias Utilizadas
-
-- **React Native + Expo**
-- **TypeScript**
-- **Expo Router**
-- **Context API**
-- **AsyncStorage**
-- **Axios / Fetch API**
-- **React Native Reanimated**
-- **Expo Vector Icons**
-- **React Native Screens / Safe Area Context**
+1. [Tecnologias Utilizadas](#tecnologias-utilizadas)
+2. [Arquitetura do Projeto](#arquitetura-do-projeto)
+3. [Setup Inicial e Configuração](#setup-inicial-e-configuração)
+4. [Integração com o Back-end](#integração-com-o-back-end)
+5. [Funcionalidades Implementadas](#funcionalidades-implementadas)
+6. [Guia de Uso e Regras de Negócio](#guia-de-uso-e-regras-de-negocio)
+7. [Layout e Design System](#layout-e-design-system)
+8. [Relato de Experiências e Desafios Enfrentados](#relatos-de-experiências-e-desafios-enfrentados)  
+9. [Considerações Finais](#considerações-finais)
 
 ---
 
-# Arquitetura do Projeto
+# 1. Tecnologias Utilizadas
 
-A estrutura abaixo reflete o código real entregue:
+O projeto foi desenvolvido seguindo os requisitos técnicos para utilizar React Native com Hooks e Componentes Funcionais.
+
+| Categoria      | Tecnologia                           | Versão  | Detalhe                                                                 |
+|----------------|---------------------------------------|-----------------------------|-------------------------------------------------------------------------|
+| Framework      | React Native + Expo                   | ~54.0.13 / 0.81.4           | Base do desenvolvimento cross-platform.                                |
+| Linguagem      | TypeScript                            | ~5.9.2                      | Garante tipagem estática e segurança de código.                        |
+| Roteamento     | Expo Router                           | ~6.0.11                     | Navegação nativa baseada em arquivos.                                  |
+| Estado/Auth    | Context API                           | N/A                         | Gerenciamento de estado global de autenticação.                        |
+| Persistência   | AsyncStorage                          | ^2.2.0                      | Armazenamento persistente do token JWT e dados do usuário.             |
+| Estilização    | Inline/StyleSheet + LinearGradient    | ^15.0.7                     | Estilo de acordo com o layout definido (Tema Laranja/Branco). |
+
+---
+
+# 2. Arquitetura da Aplicação
+
+## Estrutura de Pastas
 
 ```
 blogedc/
-├── app/                    # Rotas do Expo Router
-│   ├── (tabs)/            # Abas principais
-│   │   ├── index.tsx      # Tela inicial
-│   │   ├── two.tsx        # Tela de posts
-│   │   ├── profile.tsx    # Tela de perfil
-│   │   └── _layout.tsx    # Layout das abas
-│   └── _layout.tsx        # Layout principal
-├── src/                   # Código fonte organizado
-│   ├── components/        # Componentes reutilizáveis
-│   │   ├── common/        # Componentes comuns
-│   │   └── ui/            # Componentes de UI
-│   ├── services/          # Serviços de API
-│   ├── types/             # Definições de tipos
-│   ├── constants/         # Constantes do app
-│   └── utils/             # Utilitários
-├── components/            # Componentes globais
-│   └── SplashScreen.tsx   # Splash screen customizada
-└── hooks/                 # Hooks customizados
-    └── useSplashScreen.ts # Hook da splash screen
+├── app/                    # Camada de Rotas (Expo Router)
+│   ├── (tabs)/             # Navegação principal por abas: Home, Usuários (Admin), Perfil
+│   ├── login.tsx           # Tela de autenticação
+│   ├── create-post.tsx     # Criação de novo post
+│   ├── edit-user.tsx       # Edição de usuários
+│   └── posts/[id].tsx      # Detalhes do post / Comentários
+├── src/                    # Código-fonte principal
+│   ├── components/         # Componentes Reutilizáveis
+│   │   ├── common/         # (Ex: PostCard, CustomHeader, ProtectedRoute)
+│   │   ├── ui/             # (Ex: Button, Input)
+│   ├── services/           # Camada de Serviço (Comunicação com a API)
+│   │   └── api.ts          # Arquivo central de integração REST
+│   ├── contexts/           # Provedores de Estado Global (AuthContext)
+│   ├── constants/          # Configurações globais (API_URL, Cores)
+│   └── types/              # Definições de Tipos para TypeScript
+└── hooks/                  # Hooks customizados
 ```
 
---- 
 
-# Funcionalidades
+## Gerenciamento de Estado e Autenticação
 
-## Home (index.tsx)
+- **Estado Local:** A maioria dos estados é gerenciada localmente usando Hooks (useState, useEffect).
 
-- Listagem de posts
+- **Estado Global (Autenticação):** A autenticação é centralizada no AuthContext.tsx, que armazena o objeto user e o token JWT.
 
-- Busca por palavra-chave
+- **Persistência:** A sessão do usuário é persistida usando AsyncStorage. No entanto, o AuthContext.tsx força o logout (AsyncStorage.removeItem) na inicialização para garantir que o usuário sempre passe pela tela de login, conforme um fluxo de segurança recomendado.
 
-- Navegação para detalhes
+- **Autorização:** O componente ProtectedRoute.tsx e a lógica de rotas em app/_layout.tsx controlam o acesso a telas restritas ((tabs), create-post, etc.), redirecionando para /login se não houver autenticação.
 
-## Posts
-/posts/index.tsx
-- Lista todos os posts
+---
+# 3. Setup Inicial e Configuração
+ 
+## Pré-requisitos
+1. Node.js (versão 20.19.4 ou superior, conforme react-native engines)
 
-/posts/[id].tsx
+2. npm ou Yarn
 
-- Exibe detalhes: título, autor e conteúdo
+3. Expo CLI (instalado globalmente)
 
-/posts/create.tsx
+## Configuração do Ambiente
+O projeto requer que o endereço do backend esteja configurado em src/constants/config.ts:
 
-- Criar post (somente professores)
+```
+//src/constants/config.ts
 
-/posts/edit/[id].tsx
+export const API_CONFIG = {
+  // ATENÇÃO: Esta URL deve apontar para o seu backend REST Node.js
+  BASE_URL: "https://backend-techchalenge.vercel.app/api", 
+  TIMEOUT: 10000,
+};
 
-- Editar post (somente professores)
+export const APP_CONFIG = {
+  APP_NAME: "Blog Educacional",
+  VERSION: "1.0.0",
+  PRIMARY_COLOR: "#FF6B35", // Cor principal do tema
+  SECONDARY_COLOR: "#FFFFFF",
+};
+```
+### Instalação e execução
+1. **Clone o repositório:**
+```
+git clone https://github.com/techchallenge-fiap-2025/blogedc
+cd blogedc
+```
+2. **Instale as dependências:**
+```
+npm install
+# ou
+yarn install
+```
+3. **Execute a aplicação:**
+```
+npm start
+# Opcional: npm run android / npm run ios / npm run web
+```
 
-/admin/posts.tsx
+---
 
-- Excluir posts
+# 4. Integração com o Back-end
 
-- Edição e administração geral
+A camada de serviços (src/services/api.ts) é responsável por todas as chamadas REST, incluindo a gestão de tokens para requisições protegidas.
 
-## Professores
-/professors/index.tsx
+| Serviço     | Métodos                   | URL              | Requisitos                                                                 |
+|-------------|-----------------------------|-------------------------------------------------|------------------------------------------------------------------------------------|
+| Auth        | POST                        | /users/login                                    | Login para professores.                                                             |
+| Posts       | GET, POST, PUT, DELETE      | /posts                                          | Exibir posts e busca por palavras-chave; Criação/Edição/Exclusão.                  |
+| Usuários    | GET, POST, PUT, DELETE      | /users e /users/:id                             | Listagem, criação, edição e exclusão de Professores e Alunos   |
+| Comentários | POST, GET                   | /comments, /comments/post/:postId               | Permitir comentários nos posts (opcional).                                          |
 
-- Listagem
+---
 
-- Botões de editar e excluir
+# 5. Funcionalidades Implementadas
 
-/professors/create.tsx
+A tabela abaixo detalha a implementação dos requisitos solicitados com as telas implementadas.
 
-- Formulário de cadastro
+| Tela/Rota            | Descrição da Funcionalidade                                                                                                                                     |
+|----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| /(tabs)/index.tsx    | **Página Principal:** Exibe lista de posts (título, autor, descrição) e inclui campo de busca para filtrar por palavras-chave.                                                                        |
+| posts/[id].tsx       | **Página de Leitura:** Exibe o conteúdo completo do post e permite a seção de comentários e o botão de curtir.                                                                                        |
+| create-post.tsx      | **Criação de Postagens:** Formulário para Título, Conteúdo/Descrição e upload de imagem. Acesso pelo FAB (Floating Action Button) visível na Home.                                                    |
+| edit-post.tsx        | **Edição de Postagens:** Carrega dados do post selecionado para edição (título, descrição, imagem). Botão para salvar alterações.                                                                      |
+| add-user.tsx         | **Criação de Professores e Alunos:** Formulário unificado com campos condicionais para Professores (Matérias) e Alunos (Turma, Responsável).                                                           |
+| edit-user.tsx        | **Edição de Professores e Alunos:** Carrega dados para edição, permitindo salvar alterações em campos comuns e específicos.                                                                            |
+| /(tabs)/two.tsx      | **Listagem/Administrativa:** Tela visível apenas para Admins. Lista paginada de todos os usuários com botões de Editar e Excluir.                                                                      |
+| /(tabs)/two.tsx      | **Página Administrativa:** Concentra o acesso à gestão de usuários. A edição e exclusão de posts são feitas nas respectivas telas de detalhe (`posts/[id].tsx`).                                       |
+| login.tsx            | **Autenticação:** Login via e-mail e senha, garantindo a autorização baseada no tipo de usuário (Professor/Aluno) para acesso a funcionalidades restritas.                                             |
 
-/professors/edit/[id].tsx
+---
 
-- Edição completa
+# 6. Guia de Uso e Regras de Negócio
+### Fluxo de Autenticação e Autorização.
+O controle de acesso é baseado no campo userType (aluno, professor, admin) e nas regras de negócio:
 
-### Endpoints usados:
-GET /teachers  
-POST /teachers  
-PUT /teachers/:id  
-DELETE /teachers/:id
+| Ação                       | Aluno (aluno)   | Professor/Admin (professor/admin)                     | Arquivo de Controle                               |
+|---------------------------|-----------------|--------------------------------------------------------|---------------------------------------------------|
+| Visualizar Posts          | ✅ Completo      | ✅ Completo                                             | app/(tabs)/index.tsx                              |
+| Criar Posts               | ❌ Negado       | ✅ Permitido                                            | app/(tabs)/_layout.tsx (FAB e rota)               |
+| Editar/Excluir Posts      | ❌ Negado       | ✅ Permitido (apenas posts próprios)                    | app/posts/[id].tsx (lógica `isOwner`)             |
+| Acesso à Gestão de Usuários | ❌ Negado     | ✅ Permitido (apenas admin visualiza a aba)             | app/(tabs)/two.tsx                                |
 
-## Alunos
-/students/index.tsx
 
-- Listagem
+### Fluxo do Usuário (Guia de Uso)
+1. **Acesso:** O usuário é forçado a passar pela tela de login (/login) devido à lógica de desautenticação na inicialização do app.
 
-/students/create.tsx
+2. **Visualização:** Após o login, o usuário é direcionado para a tela Home (Aba index) que lista todos os posts com função de busca.
 
-- Cadastro de aluno
+3. **Interação (Aluno):** O aluno pode tocar em qualquer post para ver o conteúdo completo (posts/[id].tsx), curtir e adicionar comentários..tsx]
 
-/students/edit/[id].tsx
+4. **Criação (Professor/Admin):** Na tela inicial (index), o Professor/Admin vê um botão flutuante "+" para acessar a tela create-post.tsx.
 
-- Editor de aluno
+5. **Administração (Admin):** Usuários com userType: 'admin' acessam a aba Usuários (/two) para realizar CRUD de Professores e Alunos.
+   
+---
 
-### Endpoints usados:
-
-GET /students  
-POST /students  
-PUT /students/:id  
-DELETE /students/:id
+# 7. Layout e Design System
 
 ## Diferenciais de Telas
 
@@ -182,113 +226,6 @@ DELETE /students/:id
 - Informações do usuário
 - Estatísticas (posts e curtidas)
 - Configurações do app
-  
-
----
-
-# Fluxo de Autenticação
-
-A autenticação é gerenciada por AuthContext.tsx, que controla:
-
-- estado de login
-
-- token JWT
-
-- role (aluno ou professor)
-
-- persistência da sessão via AsyncStorage
-
-- logout
-
-- redirecionamento de rotas protegidas
-
-O componente `ProtectedRoute.tsx` impede acesso não autorizado a rotas internas.
-
----
-
-# Integração com o Back-end
-
-Toda comunicação com a API é feita via services/api.ts.
-
-## Ele é responsável por:
-
-- Configurar baseURL
-
-- Adicionar token no header (quando disponível)
-
-- Tratar erros de requisição
-
-- Expor funções para:
-
-    - posts
-
-    - alunos
-
-    - professores
-
-    - autenticação
-
-A aplicação usa backend real com autenticação via token JWT.
-
----
-
-# Guia de Uso
-
-## Aluno
-
-1. Fazer login
-
-2. Ver posts
-
-3. Buscar posts
-
-4. Abrir posts para leitura
-
-## Professor
-
-1. Fazer login
-
-2. Criar posts
-
-3. Editar posts
-
-4. Excluir posts
-
-5. Gerenciar alunos
-
-6. Gerenciar professores
-
-7. Acessar área administrativa
-
----
-
-# Instalação e Execução
-
-## Clone o repositório:
-
-```
-git clone https://github.com/techchallenge-fiap-2025/blogedc
-cd blogedc
-```
-
-
-## Instale as dependências
-```
-npm install
-```
-
-## Execute o app
-```
-npm start
-```
-
-
-Ou:
-```
-npm run android
-npm run ios
-npm run web
-```
 
 ## 🎨 Design System
 
@@ -306,34 +243,30 @@ npm run web
 - **PostCard**: Card para exibição de posts
 - **SplashScreen**: Tela de carregamento customizada
 
-## 🔧 Configuração
+---
 
-1. **Instalar dependências**:
+# 8. Relato de Experiências e Desafios Enfrentados
 
-   ```bash
-   npm install
-   ```
+## Metodologia de Trabalho
+Para fins de aprendizado, todo integrante da equipe se propôs a produzir sua própria interface individual para então decidir por aquela mais apropriada, seguindo os critérios de avaliação. Após a apresentação individual, um projeto é escolhido e aprimorado em conjunto, com divisões de tarefas por aptidão.
 
-2. **Configurar backend**:
+## Desafios Técnicos
+Durante o desenvolvimento, a equipe enfrentou desafios como:
 
-   - Atualizar `API_CONFIG.BASE_URL` em `src/constants/config.ts`
-   - Certificar que o backend está rodando
+- Estruturar rotas com Expo Router
+- Criar CRUDs completos para três entidades
+- Tratar erros de API
+- Organizar UI e garantir consistência visual
 
-3. **Executar o app**:
-   ```bash
-   npm start
-   ```
+## Aprendizados principais:
 
-## 📡 Integração com Backend
+- Melhores práticas com React Native + Expo
+- Controle de estado global com Context API
+- Integração front-end + back-end
+- Reuso de componentes
+- Boas práticas de organização de pastas
 
-O app está configurado para se conectar com o backend Node.js localizado em `backend-techchalenge/`. As principais integrações incluem:
-
-- **Autenticação**: Login e registro de usuários
-- **Posts**: CRUD de posts educacionais
-- **Comentários**: Sistema de comentários
-- **Curtidas**: Sistema de curtidas
-
-## 🚀 Próximos Passos
+## Próximos Passos
 
 - [ ] Implementar autenticação completa
 - [ ] Adicionar upload de imagens
@@ -341,6 +274,22 @@ O app está configurado para se conectar com o backend Node.js localizado em `ba
 - [ ] Implementar busca de posts
 - [ ] Adicionar modo offline
 - [ ] Testes unitários
+   
+---
+# 9. Considerações Finais
+
+O projeto possibilitou aplicar os conceitos aprendidos na Fase 4 - Mobile, da pós Tech Full Stack Development, da FIAP, unindo teoria e prática.
+
+O processo colaborativo e o uso de ferramentas de apoio foram fundamentais para superar desafios técnicos e entregar uma solução funcional e com propósito social.
+
+## Contatos
+lucas13piran@gmail.com
+frsilveira01@outlook.com
+lais.taine@gmail.com
+pedrojulianoquimelo@outlook.com
+
+---
+
 
 ## 📄 Licença
 
