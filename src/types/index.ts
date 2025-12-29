@@ -23,7 +23,7 @@ export interface Post {
   content: string;
   excerpt: string;
   author: User;
-  imageSrc: string; // URL da imagem salva no backend
+  imageSrc?: string; // URL da imagem salva no backend
   image?: string; // legado (remover quando não for mais usado)
   tags: string[];
   likes: number;

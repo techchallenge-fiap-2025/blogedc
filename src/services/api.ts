@@ -139,13 +139,20 @@ export class PostService {
           updatedAt: authorData.updatedAt || "",
         };
 
+        const imageSrc = post.imageSrc || post.image || "";
+        if (imageSrc) {
+          console.log(`🔍 Post ${post._id || post.id} - imageSrc original:`, imageSrc);
+          console.log(`🔍 Post ${post._id || post.id} - post.imageSrc:`, post.imageSrc);
+          console.log(`🔍 Post ${post._id || post.id} - post.image:`, post.image);
+        }
+
         return {
           id: post._id || post.id,
           title: post.title,
           content: post.content || post.excerpt || "",
           excerpt: post.excerpt || post.content?.substring(0, 150) || "",
           author: transformedAuthor,
-          imageSrc: post.imageSrc || post.image || "",
+          imageSrc: imageSrc,
           tags: post.tags || [],
           likes: post.likes || post.likesCount || 0,
           comments: post.comments || post.commentsCount || 0,

@@ -1,31 +1,31 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-  Image,
-  TouchableOpacity,
-  TextInput,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Modal,
-} from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
-import Toast from "react-native-toast-message";
-import { PostService, CommentService } from "@/src/services/api";
-import { Post, Comment } from "@/src/types";
-import { APP_CONFIG, API_CONFIG } from "@/src/constants/config";
+import { APP_CONFIG } from "@/src/constants/config";
 import { useAuth } from "@/src/contexts/AuthContext";
+import { CommentService, PostService } from "@/src/services/api";
+import { Comment, Post, User } from "@/src/types";
+import { buildImageUrl } from "@/src/utils/imageUtils";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { User } from "@/src/types";
+import { router, useLocalSearchParams } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Toast from "react-native-toast-message";
 
 export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, token, isAuthenticated } = useAuth();
-  
+
   const [post, setPost] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,15 +34,15 @@ export default function PostDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   // Verificar se o post pertence ao usuário logado
   // Comparação precisa dos IDs do autor e do usuário logado
   const isOwner = useMemo(() => {
     if (!post || !user) return false;
-    
-    const authorId = post.author._id || post.author.id || "";
-    const userId = user._id || user.id || "";
-    
+
+    const authorId = post.author._id || "";
+    const userId = user._id || "";
+
     return String(authorId) === String(userId);
   }, [post, user]);
 
@@ -56,22 +56,22 @@ export default function PostDetailScreen() {
   const loadPost = async () => {
     try {
       setLoading(true);
-      
+
       // Validar ID antes de fazer a requisição
       if (!id || id.trim() === "") {
         throw new Error("ID do post inválido");
       }
-      
+
       const response = await PostService.getPostById(id, token || undefined);
-      
+
       // Verificar se o post foi encontrado
       if (!response || !response.post) {
         throw new Error("Post não encontrado");
       }
-      
+
       // Transformar dados do backend para o formato esperado
       const postData = response.post;
-      
+
       // Transformar autor para garantir que tenha _id
       const authorData = postData.author || {};
       const transformedAuthor: User = {
@@ -84,16 +84,17 @@ export default function PostDetailScreen() {
         profileImage: authorData.profileImage,
         subjects: authorData.subjects || [],
         class: authorData.class,
-        guardian: Array.isArray(authorData.guardian) 
-          ? authorData.guardian 
-          : authorData.guardian 
-          ? [authorData.guardian] 
+        guardian: Array.isArray(authorData.guardian)
+          ? authorData.guardian
+          : authorData.guardian
+          ? [authorData.guardian]
           : undefined,
-        isActive: authorData.isActive !== undefined ? authorData.isActive : true,
+        isActive:
+          authorData.isActive !== undefined ? authorData.isActive : true,
         createdAt: authorData.createdAt || "",
         updatedAt: authorData.updatedAt || "",
       };
-      
+
       const transformedPost: Post = {
         id: postData._id || postData.id,
         title: postData.title,
@@ -108,17 +109,22 @@ export default function PostDetailScreen() {
         createdAt: postData.createdAt,
         updatedAt: postData.updatedAt,
       };
-      
+
+      console.log("🔍 Post carregado - imageSrc:", transformedPost.imageSrc);
+      console.log("🔍 Post carregado - image:", transformedPost.image);
+      console.log("🔍 PostData original - imageSrc:", postData.imageSrc);
+      console.log("🔍 PostData original - image:", postData.image);
+
       setPost(transformedPost);
-      } catch (error) {
-        Toast.show({
-          type: "error",
-          text1: "Erro",
-          text2: "Não foi possível carregar o post",
-          position: "top",
-        });
-        router.back();
-      } finally {
+    } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Erro",
+        text2: "Não foi possível carregar o post",
+        position: "top",
+      });
+      router.back();
+    } finally {
       setLoading(false);
     }
   };
@@ -126,29 +132,31 @@ export default function PostDetailScreen() {
   const loadComments = async () => {
     try {
       const response = await CommentService.getComments(id, token || undefined);
-      
+
       // Transformar comentários do backend
-      const transformedComments: Comment[] = (response.comments || []).map((comment: any) => ({
-        id: comment._id || comment.id,
-        content: comment.content,
-        author: comment.author || {
-          _id: "",
-          name: "Desconhecido",
-          email: "",
-          userType: "aluno",
-          school: "",
-          age: 0,
-          isActive: true,
-          createdAt: "",
-          updatedAt: "",
-        },
-        postId: id,
-        likes: comment.likes || 0,
-        isLiked: comment.userLiked || false,
-        createdAt: comment.createdAt,
-        updatedAt: comment.updatedAt,
-      }));
-      
+      const transformedComments: Comment[] = (response.comments || []).map(
+        (comment: any) => ({
+          id: comment._id || comment.id,
+          content: comment.content,
+          author: comment.author || {
+            _id: "",
+            name: "Desconhecido",
+            email: "",
+            userType: "aluno",
+            school: "",
+            age: 0,
+            isActive: true,
+            createdAt: "",
+            updatedAt: "",
+          },
+          postId: id,
+          likes: comment.likes || 0,
+          isLiked: comment.userLiked || false,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+        })
+      );
+
       setComments(transformedComments);
     } catch (error) {
       // Erro silencioso ao carregar comentários
@@ -170,7 +178,7 @@ export default function PostDetailScreen() {
 
     try {
       await PostService.likePost(id, token);
-      
+
       // Atualizar estado local
       setPost((prev) => {
         if (!prev) return prev;
@@ -214,11 +222,11 @@ export default function PostDetailScreen() {
     try {
       setSubmittingComment(true);
       await CommentService.createComment(id, commentText.trim(), token);
-      
+
       // Limpar campo e recarregar comentários
       setCommentText("");
       await loadComments();
-      
+
       // Atualizar contador de comentários no post
       setPost((prev) => {
         if (!prev) return prev;
@@ -228,7 +236,8 @@ export default function PostDetailScreen() {
         };
       });
     } catch (error: any) {
-      const errorMessage = error.message || "Não foi possível adicionar o comentário";
+      const errorMessage =
+        error.message || "Não foi possível adicionar o comentário";
       Toast.show({
         type: "error",
         text1: "Erro",
@@ -253,7 +262,7 @@ export default function PostDetailScreen() {
 
     try {
       await CommentService.likeComment(commentId, token);
-      
+
       // Atualizar estado local
       setComments((prev) =>
         prev.map((comment) =>
@@ -292,7 +301,7 @@ export default function PostDetailScreen() {
     try {
       setShowDeleteConfirm(false);
       await PostService.deletePost(id, token);
-      
+
       Toast.show({
         type: "success",
         text1: "Post deletado com sucesso!",
@@ -354,7 +363,10 @@ export default function PostDetailScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Post não encontrado</Text>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <Text style={styles.backButtonText}>Voltar</Text>
           </TouchableOpacity>
         </View>
@@ -367,7 +379,11 @@ export default function PostDetailScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backIcon}>
-          <FontAwesome name="arrow-left" size={24} color={APP_CONFIG.PRIMARY_COLOR} />
+          <FontAwesome
+            name="arrow-left"
+            size={24}
+            color={APP_CONFIG.PRIMARY_COLOR}
+          />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Detalhes do Post</Text>
         {isOwner ? (
@@ -375,7 +391,11 @@ export default function PostDetailScreen() {
             onPress={() => setShowMenu(true)}
             style={styles.menuIcon}
           >
-            <FontAwesome name="ellipsis-v" size={24} color={APP_CONFIG.PRIMARY_COLOR} />
+            <FontAwesome
+              name="ellipsis-v"
+              size={24}
+              color={APP_CONFIG.PRIMARY_COLOR}
+            />
           </TouchableOpacity>
         ) : (
           <View style={styles.placeholder} />
@@ -394,7 +414,10 @@ export default function PostDetailScreen() {
           activeOpacity={1}
           onPress={() => setShowMenu(false)}
         >
-          <View style={styles.menuContainer} onStartShouldSetResponder={() => true}>
+          <View
+            style={styles.menuContainer}
+            onStartShouldSetResponder={() => true}
+          >
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -402,7 +425,11 @@ export default function PostDetailScreen() {
                 handleEditPost();
               }}
             >
-              <FontAwesome name="edit" size={20} color={APP_CONFIG.PRIMARY_COLOR} />
+              <FontAwesome
+                name="edit"
+                size={20}
+                color={APP_CONFIG.PRIMARY_COLOR}
+              />
               <Text style={styles.menuItemText}>Editar</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
@@ -414,7 +441,9 @@ export default function PostDetailScreen() {
               }}
             >
               <FontAwesome name="trash" size={20} color="#F44336" />
-              <Text style={[styles.menuItemText, styles.deleteText]}>Deletar</Text>
+              <Text style={[styles.menuItemText, styles.deleteText]}>
+                Deletar
+              </Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -432,7 +461,10 @@ export default function PostDetailScreen() {
           activeOpacity={1}
           onPress={() => setShowDeleteConfirm(false)}
         >
-          <View style={styles.confirmContainer} onStartShouldSetResponder={() => true}>
+          <View
+            style={styles.confirmContainer}
+            onStartShouldSetResponder={() => true}
+          >
             <Text style={styles.confirmTitle}>Deseja deletar o post?</Text>
             <View style={styles.confirmButtons}>
               <TouchableOpacity
@@ -461,28 +493,59 @@ export default function PostDetailScreen() {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <View>
-              {/* RefreshControl será implementado se necessário */}
-            </View>
+            <View>{/* RefreshControl será implementado se necessário */}</View>
           }
         >
           {/* Imagem do post */}
-          {post.imageSrc && (
-            <Image
-              source={{
-                uri: (() => {
-                  const imagePath = post.imageSrc.trim();
-                  if (imagePath.includes("http")) return imagePath;
-                  const baseURL = API_CONFIG.BASE_URL.replace("/api", "");
-                  return imagePath.startsWith("/") 
-                    ? `${baseURL}${imagePath}` 
-                    : `${baseURL}/uploads/${imagePath}`;
-                })(),
-              }}
-              style={styles.postImage}
-              resizeMode="cover"
-            />
-          )}
+          {(post.imageSrc || post.image) &&
+            (post.imageSrc?.trim() || post.image?.trim()) && (
+              <Image
+                source={{
+                  uri: (() => {
+                    const imagePath = post.imageSrc || post.image;
+                    console.log(
+                      `🔍 PostDetail - Post ${post.id} - imagePath original:`,
+                      imagePath
+                    );
+                    console.log(
+                      `🔍 PostDetail - Post ${post.id} - post.imageSrc:`,
+                      post.imageSrc
+                    );
+                    console.log(
+                      `🔍 PostDetail - Post ${post.id} - post.image:`,
+                      post.image
+                    );
+
+                    const imageUrl = buildImageUrl(imagePath);
+
+                    if (!imageUrl) {
+                      console.log(
+                        `⚠️ PostDetail - Post ${post.id} - Sem imagem`
+                      );
+                      return "";
+                    }
+
+                    console.log(
+                      `✅ PostDetail - Post ${post.id} - URL final:`,
+                      imageUrl
+                    );
+                    return imageUrl;
+                  })(),
+                }}
+                style={styles.postImage}
+                resizeMode="cover"
+                onError={(error) => {
+                  console.error(
+                    `❌ PostDetail - Erro ao carregar imagem do post ${post.id}:`,
+                    error
+                  );
+                  console.error(`❌ PostDetail - imageSrc:`, post.imageSrc);
+                  console.error(`❌ PostDetail - image:`, post.image);
+                  const imageUrl = buildImageUrl(post.imageSrc || post.image);
+                  console.error(`❌ PostDetail - URL tentada:`, imageUrl);
+                }}
+              />
+            )}
 
           {/* Conteúdo do post */}
           <View style={styles.content}>
@@ -493,7 +556,7 @@ export default function PostDetailScreen() {
               <TouchableOpacity
                 style={styles.authorContainer}
                 onPress={() => {
-                  const authorId = post.author._id || post.author.id;
+                  const authorId = post.author._id;
                   if (authorId) {
                     router.push(`/profile/${authorId}`);
                   }
@@ -525,10 +588,7 @@ export default function PostDetailScreen() {
                   color={post.isLiked ? APP_CONFIG.PRIMARY_COLOR : "#999"}
                 />
                 <Text
-                  style={[
-                    styles.actionText,
-                    post.isLiked && styles.likedText,
-                  ]}
+                  style={[styles.actionText, post.isLiked && styles.likedText]}
                 >
                   {post.likes}
                 </Text>
@@ -578,7 +638,9 @@ export default function PostDetailScreen() {
                       <FontAwesome
                         name={comment.isLiked ? "heart" : "heart-o"}
                         size={14}
-                        color={comment.isLiked ? APP_CONFIG.PRIMARY_COLOR : "#999"}
+                        color={
+                          comment.isLiked ? APP_CONFIG.PRIMARY_COLOR : "#999"
+                        }
                       />
                       <Text
                         style={[
@@ -614,7 +676,9 @@ export default function PostDetailScreen() {
                 styles.submitButtonDisabled,
             ]}
             onPress={handleSubmitComment}
-            disabled={!isAuthenticated || submittingComment || !commentText.trim()}
+            disabled={
+              !isAuthenticated || submittingComment || !commentText.trim()
+            }
           >
             {submittingComment ? (
               <ActivityIndicator size="small" color="#FFF" />
@@ -972,4 +1036,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

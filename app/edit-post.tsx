@@ -15,7 +15,8 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
-import { APP_CONFIG, API_CONFIG } from "@/src/constants/config";
+import { APP_CONFIG } from "@/src/constants/config";
+import { buildImageUrl } from "@/src/utils/imageUtils";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { PostService } from "@/src/services/api";
@@ -51,16 +52,18 @@ export default function EditPostScreen() {
         });
         
         // Carregar imagem original se existir
-        if (post.imageSrc) {
-          const imageUrl = (() => {
-            const imagePath = post.imageSrc.trim();
-            if (imagePath.includes("http")) return imagePath;
-            const baseURL = API_CONFIG.BASE_URL.replace("/api", "");
-            return imagePath.startsWith("/") 
-              ? `${baseURL}${imagePath}` 
-              : `${baseURL}/uploads/${imagePath}`;
-          })();
-          setSelectedImage(imageUrl);
+        const imagePath = post.imageSrc || post.image;
+        if (imagePath && (imagePath.trim() || "")) {
+          console.log("🔍 EditPost - Carregando imagem do post:", imagePath.substring(0, 100));
+          const imageUrl = buildImageUrl(imagePath);
+          console.log("🔍 EditPost - URL da imagem construída:", imageUrl?.substring(0, 100));
+          if (imageUrl) {
+            setSelectedImage(imageUrl);
+          } else {
+            console.warn("⚠️ EditPost - Não foi possível construir URL da imagem");
+          }
+        } else {
+          console.log("⚠️ EditPost - Post não tem imagem");
         }
       }
     } catch (error) {

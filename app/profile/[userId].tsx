@@ -13,6 +13,7 @@ import {
 import { useLocalSearchParams, router, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { APP_CONFIG, API_CONFIG } from "@/src/constants/config";
+import { buildImageUrl } from "@/src/utils/imageUtils";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { CustomHeader } from "@/src/components/common/CustomHeader";
@@ -25,7 +26,8 @@ interface UserPost {
   title: string;
   excerpt: string;
   content: string;
-  imageSrc: string;
+  imageSrc?: string;
+  image?: string;
   likes: number;
   comments: number;
   tags: string[];
@@ -341,21 +343,19 @@ export default function UserProfileScreen() {
                     style={styles.postCard}
                     onPress={() => handlePostPress(post._id || post.id)}
                   >
-                    {post.imageSrc && (
+                    {(post.imageSrc || post.image) && (post.imageSrc?.trim() || post.image?.trim()) && (
                       <Image
                         source={{
-                          uri: post.imageSrc.includes("http")
-                            ? post.imageSrc
-                            : (() => {
-                                const imagePath = post.imageSrc.trim();
-                                if (imagePath.includes("http")) return imagePath;
-                                const baseURL = API_CONFIG.BASE_URL.replace("/api", "");
-                                return imagePath.startsWith("/") 
-                                  ? `${baseURL}${imagePath}` 
-                                  : `${baseURL}/uploads/${imagePath}`;
-                              })(),
+                          uri: buildImageUrl(post.imageSrc || post.image) || "",
                         }}
                         style={styles.postImage}
+                        onError={(error) => {
+                          console.error("Erro ao carregar imagem do post:", error);
+                          console.error("imageSrc:", post.imageSrc);
+                          console.error("image:", post.image);
+                          console.error("URL tentada:", buildImageUrl(post.imageSrc || post.image));
+                        }}
+                        resizeMode="cover"
                       />
                     )}
                     <Text style={styles.postTitle}>{post.title}</Text>

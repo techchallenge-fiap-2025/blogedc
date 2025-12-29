@@ -10,6 +10,7 @@ import {
 import { router } from "expo-router";
 import { Post } from "../../types";
 import { APP_CONFIG } from "../../constants/config";
+import { buildImageUrl } from "../../utils/imageUtils";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 interface PostCardProps extends TouchableOpacityProps {
@@ -51,12 +52,33 @@ export const PostCard: React.FC<PostCardProps> = ({
         <View style={styles.imageContainer}>
           <Image
             source={{
-              uri:
-                post.imageSrc ||
-                post.image ||
-                "https://via.placeholder.com/200x200?text=Sem+imagem",
+              uri: (() => {
+                const imagePath = post.imageSrc || post.image;
+                console.log(`🔍 PostCard - Post ${post.id} - imagePath original:`, imagePath?.substring(0, 100));
+                console.log(`🔍 PostCard - Post ${post.id} - Tipo:`, typeof imagePath);
+                console.log(`🔍 PostCard - Post ${post.id} - É data URI?`, imagePath?.includes("data:"));
+                
+                const imageUrl = buildImageUrl(imagePath);
+                
+                if (!imageUrl) {
+                  console.log(`⚠️ PostCard - Post ${post.id} - Sem imagem, usando placeholder`);
+                  return "https://via.placeholder.com/200x200?text=Sem+imagem";
+                }
+                
+                console.log(`✅ PostCard - Post ${post.id} - URL final (primeiros 100 chars):`, imageUrl.substring(0, 100));
+                console.log(`✅ PostCard - Post ${post.id} - É data URI na URL final?`, imageUrl.includes("data:"));
+                return imageUrl;
+              })(),
             }}
             style={styles.image}
+            onError={(error) => {
+              console.error(`❌ PostCard - Erro ao carregar imagem do post ${post.id}:`, error);
+              console.error(`❌ PostCard - imageSrc:`, post.imageSrc);
+              console.error(`❌ PostCard - image:`, post.image);
+              const imageUrl = buildImageUrl(post.imageSrc || post.image);
+              console.error(`❌ PostCard - URL tentada:`, imageUrl);
+            }}
+            resizeMode="cover"
           />
         </View>
 
