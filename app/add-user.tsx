@@ -403,7 +403,7 @@ export default function AddUserScreen() {
       }
 
       // Chamar API de registro (rota pública, mas enviamos token para validação se necessário)
-      const baseURL = API_CONFIG.BASE_URL.replace("/api", "");
+      const baseURL = API_CONFIG.BASE_URL;
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
       };
