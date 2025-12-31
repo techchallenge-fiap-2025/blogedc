@@ -26,8 +26,8 @@ Pessoas da rede pública de educação, mais especificamente dois agentes:
 
 ## Índice
 
-1. [Tecnologias Utilizadas](#tecnologias-utilizadas)
-2. [Arquitetura do Projeto](#arquitetura-do-projeto)
+1. [Tecnologias Utilizadas](#1.-tecnologias-utilizadas)
+2. [Arquitetura da Aplicação](#arquitetura-da-aplicação)
 3. [Setup Inicial e Configuração](#setup-inicial-e-configuração)
 4. [Integração com o Back-end](#integração-com-o-back-end)
 5. [Funcionalidades Implementadas](#funcionalidades-implementadas)
@@ -269,9 +269,7 @@ Durante o desenvolvimento, a equipe enfrentou desafios como:
 ## Próximos Passos
 
 - [ ] Implementar autenticação completa
-- [ ] Adicionar upload de imagens
 - [ ] Criar sistema de notificações
-- [ ] Implementar busca de posts
 - [ ] Adicionar modo offline
 - [ ] Testes unitários
    
