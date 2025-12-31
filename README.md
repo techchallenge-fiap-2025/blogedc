@@ -26,7 +26,7 @@ Pessoas da rede pública de educação, mais especificamente dois agentes:
 
 ## Índice
 
-1. [Tecnologias Utilizadas](#-1.-tecnologias-utilizadas)
+1. [Tecnologias Utilizadas](#tecnologias-utilizadas)
 2. [Arquitetura da Aplicação](#arquitetura-da-aplicação)
 3. [Setup Inicial e Configuração](#setup-inicial-e-configuração)
 4. [Integração com o Back-end](#integração-com-o-back-end)
